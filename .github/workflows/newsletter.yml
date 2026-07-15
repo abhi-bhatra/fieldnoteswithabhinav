@@ -8,14 +8,10 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,21 +25,16 @@ jobs:
 
       - name: Generate newsletter draft
         env:
-          AZURE_OPENAI_ENDPOINT:    ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY:     ${{ secrets.AZURE_OPENAI_API_KEY }}
-          AZURE_OPENAI_DEPLOYMENT:  gpt-5-1
-          BEEHIIV_API_KEY:          ${{ secrets.BEEHIIV_API_KEY }}
-          BEEHIIV_PUBLICATION_ID:   ${{ secrets.BEEHIIV_PUBLICATION_ID }}
+          AZURE_OPENAI_ENDPOINT:   ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY:    ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: gpt-5-1
+          BEEHIIV_API_KEY:         ${{ secrets.BEEHIIV_API_KEY }}
+          BEEHIIV_PUBLICATION_ID:  ${{ secrets.BEEHIIV_PUBLICATION_ID }}
         run: python pipeline/run.py
 
-      - name: Clean up drafts older than 4 weeks
-        run: |
-          find drafts/ -name "*.md" -mtime +28 -delete 2>/dev/null || true
-
-      - name: Commit draft and issue number
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add drafts/ pipeline/state/issue_number.txt
-          git diff --staged --quiet || git commit -m "newsletter: issue $(cat pipeline/state/issue_number.txt) draft [skip ci]"
-          git push
+      - name: Upload draft and banner
+        uses: actions/upload-artifact@v4
+        with:
+          name: newsletter-issue-${{ github.run_number }}
+          path: drafts/
+          retention-days: 30

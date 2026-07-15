@@ -48,6 +48,11 @@ def _extract_topics(content_markdown: str, max_topics: int = 3) -> list[str]:
     cleaned = []
     for t in topics[:max_topics]:
         t = t.strip()
+        # cut at first period or em-dash if title is long
+        for sep in [".", " —", " -", ":"]:
+            if sep in t and t.index(sep) > 15:
+                t = t[:t.index(sep)]
+                break
         if len(t) > 55:
             t = t[:52] + "..."
         cleaned.append(t)
