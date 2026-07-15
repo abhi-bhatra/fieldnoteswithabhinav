@@ -9,7 +9,7 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     permissions:
-      contents: write      # Needed to commit issue number back to repo
+      contents: write
 
     steps:
       - name: Checkout
@@ -27,19 +27,23 @@ jobs:
       - name: Install dependencies
         run: pip install -r pipeline/requirements.txt
 
-      - name: Generate and post newsletter draft
+      - name: Generate newsletter draft
         env:
-          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_API_KEY:  ${{ secrets.AZURE_OPENAI_API_KEY }}
-          AZURE_OPENAI_DEPLOYMENT: gpt-5-1
-          BEEHIIV_API_KEY:       ${{ secrets.BEEHIIV_API_KEY }}
-          BEEHIIV_PUBLICATION_ID: ${{ secrets.BEEHIIV_PUBLICATION_ID }}
+          AZURE_OPENAI_ENDPOINT:    ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY:     ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_OPENAI_DEPLOYMENT:  gpt-5-1
+          BEEHIIV_API_KEY:          ${{ secrets.BEEHIIV_API_KEY }}
+          BEEHIIV_PUBLICATION_ID:   ${{ secrets.BEEHIIV_PUBLICATION_ID }}
         run: python pipeline/run.py
 
-      - name: Commit updated issue number
+      - name: Clean up drafts older than 4 weeks
+        run: |
+          find drafts/ -name "*.md" -mtime +28 -delete 2>/dev/null || true
+
+      - name: Commit draft and issue number
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pipeline/state/issue_number.txt
-          git diff --staged --quiet || git commit -m "chore: issue number bump [skip ci]"
+          git add drafts/ pipeline/state/issue_number.txt
+          git diff --staged --quiet || git commit -m "newsletter: issue $(cat pipeline/state/issue_number.txt) draft [skip ci]"
           git push

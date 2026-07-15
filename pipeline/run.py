@@ -2,7 +2,7 @@ import logging
 import sys
 
 from src.ai_processor import generate_newsletter
-from src.beehiiv_client import post_draft
+from src.draft_writer import save_draft
 from src.rss_fetcher import fetch_articles
 from src.state_manager import get_and_increment_issue_number
 
@@ -23,9 +23,9 @@ def main() -> None:
 
     issue_number = get_and_increment_issue_number()
     result = generate_newsletter(articles, issue_number)
-    draft_id = post_draft(result["title"], result["content_markdown"])
+    draft_path = save_draft(result["title"], result["content_markdown"])
 
-    logger.info(f"Done. Issue #{issue_number} posted as Beehiiv draft {draft_id}")
+    logger.info(f"Done. Issue #{issue_number} saved to {draft_path}")
 
 
 if __name__ == "__main__":
