@@ -2,11 +2,27 @@ import calendar
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import feedparser
 import httpx
 
 logger = logging.getLogger(__name__)
+
+SEEN_URLS_FILE = Path(__file__).parent.parent / "state" / "seen_urls.txt"
+SEEN_URLS_MAX  = 500  # cap to avoid unbounded growth
+
+
+def _load_seen_urls() -> set[str]:
+    if SEEN_URLS_FILE.exists():
+        return set(SEEN_URLS_FILE.read_text().splitlines())
+    return set()
+
+
+def _save_seen_urls(seen: set[str]) -> None:
+    urls = list(seen)[-SEEN_URLS_MAX:]  # keep only latest N
+    SEEN_URLS_FILE.write_text("\n".join(urls))
+
 
 # ---------------------------------------------------------------------------
 # Feed list — (source_name, url, requires_custom_headers)
@@ -52,9 +68,11 @@ class Article:
     published: datetime
 
 
-def fetch_articles(lookback_days: int = 7) -> list[Article]:
-    cutoff = datetime.now(timezone.utc) - timedelta(days=lookback_days)
+def fetch_articles(lookback_days: int = 3) -> list[Article]:
+    cutoff   = datetime.now(timezone.utc) - timedelta(days=lookback_days)
+    seen     = _load_seen_urls()
     articles: list[Article] = []
+    new_urls: set[str] = set()
 
     for source_name, url, needs_headers in FEEDS:
         try:
@@ -67,21 +85,28 @@ def fetch_articles(lookback_days: int = 7) -> list[Article]:
             for entry in feed.entries:
                 if count >= ARTICLES_PER_FEED:
                     break
+                article_url = entry.get("link", "")
+                if article_url in seen:
+                    continue  # already used in a previous issue
                 published = _parse_date(entry)
                 if published and published < cutoff:
                     continue
                 articles.append(Article(
                     title=entry.get("title", "").strip(),
-                    url=entry.get("link", ""),
+                    url=article_url,
                     summary=_clean_summary(entry.get("summary", "")),
                     source=source_name,
                     published=published or datetime.now(timezone.utc),
                 ))
+                new_urls.add(article_url)
                 count += 1
 
-            logger.info(f"Fetched {count} articles from {source_name}")
+            logger.info(f"Fetched {count} new articles from {source_name}")
         except Exception as e:
             logger.warning(f"Failed to fetch {source_name}: {e}")
+
+    # persist seen URLs so next run skips these
+    _save_seen_urls(seen | new_urls)
 
     articles.sort(key=lambda a: a.published, reverse=True)
     return articles
