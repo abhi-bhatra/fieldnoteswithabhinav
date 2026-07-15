@@ -59,7 +59,7 @@ def generate_newsletter(articles: list[Article], issue_number: int) -> dict:
                 issue_number=issue_number,
             )},
         ],
-        max_tokens=2000,
+        max_completion_tokens=2000,
         temperature=0.7,
     )
 
