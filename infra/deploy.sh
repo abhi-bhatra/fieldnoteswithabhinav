@@ -35,10 +35,16 @@ OPENAI_ENDPOINT=$(az deployment group show \
   --query "properties.outputs.endpoint.value" \
   --output tsv)
 
-OPENAI_KEY=$(az deployment group show \
+OPENAI_NAME=$(az deployment group show \
   --resource-group "$RESOURCE_GROUP" \
   --name main \
-  --query "properties.outputs.key.value" \
+  --query "properties.outputs.openAiName.value" \
+  --output tsv)
+
+OPENAI_KEY=$(az cognitiveservices account keys list \
+  --name "$OPENAI_NAME" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query "key1" \
   --output tsv)
 
 echo "==> Pushing secrets to GitHub ($GITHUB_REPO)"

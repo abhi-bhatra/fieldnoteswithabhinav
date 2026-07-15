@@ -31,4 +31,4 @@ resource modelDeployment 'Microsoft.CognitiveServices/accounts/deployments@2023-
 }
 
 output endpoint string = openAi.properties.endpoint
-output key string = openAi.listKeys().key1
+output openAiName string = openAi.name
