@@ -29,6 +29,6 @@ This repo is the pipeline that generates the newsletter automatically every day 
 
 ## About
 
-Built and written by [Abhinav Sharma](https://www.linkedin.com/in/abhinavsharma332) — Microsoft MVP, Senior DevOps & Platform Engineer.
+Built and written by [Abhinav Sharma](https://www.linkedin.com/in/abhinavsharma0) — Microsoft MVP, Senior DevOps & Platform Engineer.
 
 Also check out the YouTube channel: [Field Notes With Abhinav](https://www.youtube.com/@fieldnoteswithabhinav)
