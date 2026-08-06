@@ -23,12 +23,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r pipeline/requirements.txt
 
-      - name: Restore seen URLs cache
+      - name: Restore pipeline state (issue number + seen URLs)
         uses: actions/cache@v4
         with:
-          path: pipeline/state/seen_urls.txt
-          key: seen-urls-${{ github.run_id }}
-          restore-keys: seen-urls-
+          path: |
+            pipeline/state/issue_number.txt
+            pipeline/state/seen_urls.txt
+          key: newsletter-state-${{ github.run_id }}
+          restore-keys: newsletter-state-
 
       - name: Generate newsletter draft
         env:

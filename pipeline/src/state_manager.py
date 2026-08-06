@@ -1,6 +1,7 @@
 """
-Tracks newsletter issue number in a file committed to the repo.
-GitHub Actions reads it, increments it, and commits it back after each run.
+Tracks newsletter issue number in a file under pipeline/state/.
+GitHub Actions restores and saves this file via the actions/cache step
+in newsletter.yml, so the count persists across runs without git commits.
 """
 import logging
 from pathlib import Path
